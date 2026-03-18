@@ -3,6 +3,10 @@
     "Generator API": {
       "commandName": "DebugRoslynComponent",
       "targetProject": "..\\RPDemo.Api\\RPDemo.Api.csproj"
+    },
+    "Profile 1": {
+      "commandName": "DebugRoslynComponent",
+      "targetProject": "..\\RPDemo.Application\\RPDemo.Application.csproj"
     }
   }
 }

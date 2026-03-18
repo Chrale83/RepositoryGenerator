@@ -18,7 +18,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\RepositoryGenerator.Library\RepositoryGenerator.Library.csproj" />
+	  <ProjectReference Include="..\RepositoryGenerator.Library\RepositoryGenerator.Library.csproj"
+					ReferenceOutputAssembly="true"
+					OutputItemType="Analyzer" />
   </ItemGroup>
 
 </Project>
