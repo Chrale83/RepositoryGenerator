@@ -1,3 +1,13 @@
 <Solution>
+  <Folder Name="/Demo/">
+    <Project Path="RPDemo.Api/RPDemo.Api.csproj" />
+    <Project Path="RPDemo.Application/RPDemo.Application.csproj" />
+    <Project Path="RPDemo.Domain/RPDemo.Domain.csproj" />
+    <Project Path="RPDemo.Infrastructure/RPDemo.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/Solution Items/">
+    <File Path=".gitignore" />
+  </Folder>
   <Project Path="RepositoryGenerator.Generator/RepositoryGenerator.Generator.csproj" />
+  <Project Path="RepositoryGenerator.Library/RepositoryGenerator.Library.csproj" />
 </Solution>
