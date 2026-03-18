@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "Generator API": {
+      "commandName": "DebugRoslynComponent",
+      "targetProject": "..\\RPDemo.Api\\RPDemo.Api.csproj"
+    }
+  }
+}
