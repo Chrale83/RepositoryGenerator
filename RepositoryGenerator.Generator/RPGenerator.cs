@@ -1,9 +1,13 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using RepositoryGenerator.Library.Models;
+using RepositoryGenerator.Generator.Helpers;
+using RepositoryGenerator.Generator.Models;
 
 namespace RepositoryGenerator.Generator
 {
@@ -13,29 +17,112 @@ namespace RepositoryGenerator.Generator
         private const string InterfaceExtensionAttribute =
             "RepositoryGenerator.Library.Attributes.RPInterfaceAttribute`1";
         private const string ClassExtensionAttribute =
-            "RepositoryGenerator.Library.Attributes.RPClassAttribute`1";
+            "RepositoryGenerator.Library.Attributes.RPClassAttribute`2";
 
         public void Initialize(IncrementalGeneratorInitializationContext context)
         {
-            var interfaces = context.SyntaxProvider.CreateSyntaxProvider(
-                predicate: static (node, _) => IsInterfaceTarget(node),
-                transform: static (ctx, _) => GetInterfaceTarget(ctx)
-            );
+            var interfaces = context
+                .SyntaxProvider.CreateSyntaxProvider(
+                    predicate: static (node, _) => IsInterfaceTarget(node),
+                    transform: static (ctx, _) => GetInterfaceTarget(ctx)
+                )
+                .Collect();
 
-            var classes = context.SyntaxProvider.CreateSyntaxProvider(
-                predicate: static (node, _) => IsClassTarget(node),
-                transform: static (ctx, _) => GetClassTarget(ctx)
-            );
+            var classes = context
+                .SyntaxProvider.CreateSyntaxProvider(
+                    predicate: static (node, _) => IsClassTarget(node),
+                    transform: static (ctx, _) => GetClassTarget(ctx)
+                )
+                .Collect();
+
+            var combined = interfaces.Combine(classes);
 
             context.RegisterSourceOutput(
                 interfaces,
                 static (ctx, source) => ExecuteInterface(ctx, source)
             );
+
+            context.RegisterSourceOutput(
+                classes,
+                static (ctx, source) => ExecuteClass(ctx, source)
+            );
+
+            context.RegisterSourceOutput(
+                combined,
+                static (ctx, source) => BuildDIRegistration(ctx, source)
+            );
         }
 
-        #region Class stuff
+        private static void BuildDIRegistration(
+            SourceProductionContext ctx,
+            (ImmutableArray<InterfaceToGenerate> Left, ImmutableArray<ClassToGenerate> Right) source
+        )
+        {
+            var classList = source.Right;
 
-        private static ClassToGenerateData? GetClassTarget(GeneratorSyntaxContext context)
+            if (classList.IsDefaultOrEmpty)
+            {
+                return;
+            }
+
+            var usings = new HashSet<string> { "Microsoft.Extensions.DependencyInjection" };
+
+            foreach (var c in classList)
+            {
+                usings.Add(c.ClassNamespaceName);
+                usings.Add(c.InterfaceUsingNamespace);
+            }
+
+            var sb = new StringBuilder();
+
+            foreach (var u in usings.OrderBy(x => x))
+                sb.AppendLine($"using {u};");
+
+            sb.AppendLine();
+            sb.AppendLine("public static class ServiceCollectionExtensions");
+            sb.AppendLine("{");
+            sb.AppendLine(
+                "    public static IServiceCollection AddGeneratedServices(this IServiceCollection services)"
+            );
+            sb.AppendLine("    {");
+
+            foreach (var c in classList)
+            {
+                sb.AppendLine($"        services.AddScoped<{c.InterfaceName}, {c.ClassName}>();");
+            }
+
+            sb.AppendLine("        return services;");
+            sb.AppendLine("    }");
+            sb.AppendLine("}");
+
+            ctx.AddSource("ServiceCollectionExtensions.g.cs", sb.ToString());
+        }
+
+        #region class stuff
+        private static void ExecuteClass(
+            SourceProductionContext context,
+            ImmutableArray<ClassToGenerate?> classes
+        )
+        {
+            if (classes == null)
+            {
+                return;
+            }
+
+            foreach (var classToGenerate in classes)
+            {
+                if (classToGenerate is null)
+                {
+                    continue;
+                }
+
+                var source = CodeWriter.WriteRepoClass(classToGenerate);
+
+                context.AddSource(source.FileName, source.Code);
+            }
+        }
+
+        private static ClassToGenerate? GetClassTarget(GeneratorSyntaxContext context)
         {
             //KOlla om den har rätt attribut
             var classDeclarationSyntax = (ClassDeclarationSyntax)context.Node;
@@ -62,7 +149,7 @@ namespace RepositoryGenerator.Generator
                 return null;
             }
 
-            //Hämta attributdata
+            //get attribute data
 
             var attribute = classSymbol
                 .GetAttributes()
@@ -86,10 +173,53 @@ namespace RepositoryGenerator.Generator
             var entityName = entity.Name;
             var entityUsingName = entity.ContainingNamespace.ToDisplayString();
 
+            //Get the primarykey for the entity
+
+            var conventionPrimaryKey = $"{entityName}Id";
+
+            var props = entity
+                .GetMembers()
+                .OfType<IPropertySymbol>()
+                .Where(p =>
+                    string.Equals(p.Name, conventionPrimaryKey, StringComparison.OrdinalIgnoreCase)
+                    || string.Equals(p.Name, "Id", StringComparison.OrdinalIgnoreCase)
+                )
+                .ToList();
+            var entityPrimaryKey = string.Empty;
+            if (props.Count == 1 && props[0].Type.SpecialType == SpecialType.System_Int32)
+            {
+                entityPrimaryKey = props[0].Name;
+            }
+            else
+            {
+                return null;
+            }
+
             var className = classSymbol.Name;
-            var classNamespace = classSymbol.ContainingNamespace.Name;
+            var classNamespace = classSymbol.ContainingNamespace.ToDisplayString();
 
             var dbContextArgument = attribute.AttributeClass.TypeArguments[1];
+            // Need to get the database name for the entity
+            // Get the the properties from the DbContext
+            // Pick the one that is a propertytype of DbSet and have the selected entity, get the name of the dbset
+
+            var dbSetSymbol = context.SemanticModel.Compilation.GetTypeByMetadataName(
+                "Microsoft.EntityFrameworkCore.DbSet`1"
+            );
+
+            var dbsetSymbol = dbContextArgument
+                .GetMembers()
+                .OfType<IPropertySymbol>()
+                .FirstOrDefault(p =>
+                    p.Type is INamedTypeSymbol namedType
+                    && SymbolEqualityComparer.Default.Equals(
+                        namedType.OriginalDefinition,
+                        dbSetSymbol
+                    )
+                    && p.Type.TypeKind == entity.TypeKind
+                );
+
+            var dbsetName = dbsetSymbol.Name;
 
             var dbArgumentName = dbContextArgument.Name;
             var dbArgumentUsing = dbContextArgument.ContainingNamespace.ToDisplayString();
@@ -101,7 +231,7 @@ namespace RepositoryGenerator.Generator
             var interfaceName = interfaceType.Name;
             var interfaceUsing = interfaceType.ContainingNamespace.ToDisplayString();
 
-            return new ClassToGenerateData(
+            return new ClassToGenerate(
                 classNamespace,
                 className,
                 entityUsingName,
@@ -109,7 +239,9 @@ namespace RepositoryGenerator.Generator
                 dbArgumentUsing,
                 dbArgumentName,
                 interfaceName,
-                interfaceUsing
+                interfaceUsing,
+                entityPrimaryKey,
+                dbsetName
             );
         }
 
@@ -128,42 +260,24 @@ namespace RepositoryGenerator.Generator
         #region Interface stuff
         private static void ExecuteInterface(
             SourceProductionContext context,
-            InterfaceToGenerate? interfaceToGenerate
+            ImmutableArray<InterfaceToGenerate?> interfaces
         )
         {
-            if (interfaceToGenerate == null)
+            if (interfaces == null)
             {
                 return;
             }
 
-            var interfaceNamespaceName = interfaceToGenerate.NamespaceName;
-            var interfaceName = interfaceToGenerate.InterfaceName;
-            var argumentTypeName = interfaceToGenerate.ArgumentName;
-            var argumentUsing = interfaceToGenerate.ArgumentUsingName;
+            foreach (var interfaceToGenerate in interfaces)
+            {
+                if (interfaceToGenerate is null)
+                {
+                    continue;
+                }
+                var source = CodeWriter.WriteInterface(interfaceToGenerate);
 
-            var fileName = $"{interfaceNamespaceName}.{interfaceName}.g.cs";
-
-            var stringBuilder = new StringBuilder();
-
-            stringBuilder.Append(
-                $@"
-using {argumentUsing};
-
-namespace {interfaceNamespaceName}
-{{
-    public partial interface {interfaceName}
-    {{
-        Task<{argumentTypeName}> GetById(int id);
-        Task<List<{argumentTypeName}>> GetByIdList(int id);
-
-    }}
-
-}}
-
-"
-            );
-
-            context.AddSource(fileName, stringBuilder.ToString());
+                context.AddSource(source.FileName, source.Code);
+            }
         }
 
         private static bool IsInterfaceTarget(SyntaxNode node)

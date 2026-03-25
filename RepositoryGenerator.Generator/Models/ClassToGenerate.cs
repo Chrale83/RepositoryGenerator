@@ -1,31 +1,32 @@
 ﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Text;
 
-namespace RepositoryGenerator.Library.Models
+namespace RepositoryGenerator.Generator.Models
 {
-    public class ClassToGenerateData(
+    public class ClassToGenerate(
         string namespaceName,
         string className,
-        string typeArgumentUsingName,
-        string typeArgumentName,
+        string entityUsingName,
+        string entityName,
         string dbArgumentNamespaceName,
         string dbArgumentName,
         string interfaceName,
-        string interfaceUsingNamespace
-    ) : IEquatable<ClassToGenerateData>
+        string interfaceUsingNamespace,
+        string entityPrimaryKey,
+        string dbSetName
+    ) : IEquatable<ClassToGenerate>
     {
         public string ClassNamespaceName { get; } = namespaceName;
         public string ClassName { get; } = className;
-        public string EntityUsingName { get; } = typeArgumentUsingName;
-        public string EntityName { get; } = typeArgumentName;
+        public string EntityUsingName { get; } = entityUsingName;
+        public string EntityName { get; } = entityName;
         public string DbContextUsingName { get; } = dbArgumentNamespaceName;
         public string DbContextName { get; } = dbArgumentName;
         public string InterfaceName { get; } = interfaceName;
         public string InterfaceUsingNamespace { get; } = interfaceUsingNamespace;
+        public string EntityPrimaryKey { get; } = entityPrimaryKey;
+        public string DbSetName { get; } = dbSetName;
 
-        public bool Equals(ClassToGenerateData other)
+        public bool Equals(ClassToGenerate other)
         {
             if (other is null)
                 return false;

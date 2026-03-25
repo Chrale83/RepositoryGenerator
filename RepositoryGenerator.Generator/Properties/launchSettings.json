@@ -7,6 +7,10 @@
     "Profile 1": {
       "commandName": "DebugRoslynComponent",
       "targetProject": "..\\RPDemo.Application\\RPDemo.Application.csproj"
+    },
+    "Profile 2": {
+      "commandName": "DebugRoslynComponent",
+      "targetProject": "..\\RPDemo.Infrastructure\\RPDemo.Infrastructure.csproj"
     }
   }
 }

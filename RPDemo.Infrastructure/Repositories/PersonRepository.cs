@@ -1,4 +1,9 @@
-﻿namespace RPDemo.Infrastructure.Repositories
+﻿using RepositoryGenerator.Library.Attributes;
+using RPDemo.Application.Interfaces;
+using RPDemo.Domain.Entities;
+
+namespace RPDemo.Infrastructure.Repositories
 {
-    public partial class PersonRepository { }
+    [RPClass<Person, DemoDbContext>]
+    public partial class PersonRepository : IPersonRepo { }
 }

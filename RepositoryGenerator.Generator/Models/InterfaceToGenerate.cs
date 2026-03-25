@@ -1,7 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 
-namespace RepositoryGenerator.Library.Models
+namespace RepositoryGenerator.Generator.Models
 {
     public sealed class InterfaceToGenerate(
         string interfaceNamespaceName,

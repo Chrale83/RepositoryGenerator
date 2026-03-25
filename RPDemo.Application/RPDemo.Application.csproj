@@ -7,10 +7,19 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\RepositoryGenerator.Generator\RepositoryGenerator.Generator.csproj" ReferenceOutputAssembly="false"
-					  OutputItemType="Analyzer"/>
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.5" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.5" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\RepositoryGenerator.Generator\RepositoryGenerator.Generator.csproj" ReferenceOutputAssembly="false" OutputItemType="Analyzer" />
     <ProjectReference Include="..\RepositoryGenerator.Library\RepositoryGenerator.Library.csproj" />
     <ProjectReference Include="..\RPDemo.Domain\RPDemo.Domain.csproj" />
   </ItemGroup>
+
+	
+	<PropertyGroup>
+		<ProduceReferenceAssembly>true</ProduceReferenceAssembly>
+	</PropertyGroup>
 
 </Project>

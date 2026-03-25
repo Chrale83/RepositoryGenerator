@@ -11,8 +11,16 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\RepositoryGenerator.Generator\RepositoryGenerator.Generator.csproj" 
+					  ReferenceOutputAssembly="false"
+					  OutputItemType="Analyzer" />
+    <ProjectReference Include="..\RepositoryGenerator.Library\RepositoryGenerator.Library.csproj" />
     <ProjectReference Include="..\RPDemo.Application\RPDemo.Application.csproj" />
     <ProjectReference Include="..\RPDemo.Domain\RPDemo.Domain.csproj" />
   </ItemGroup>
+
+	<PropertyGroup>
+		<ProduceReferenceAssembly>true</ProduceReferenceAssembly>
+	</PropertyGroup>
 
 </Project>
