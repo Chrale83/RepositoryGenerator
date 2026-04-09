@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
-using System.Reflection;
 using System.Text;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -21,10 +20,18 @@ namespace RepositoryGenerator.Generator
 
         public void Initialize(IncrementalGeneratorInitializationContext context)
         {
+            //var interfaces = context
+            //    .SyntaxProvider.CreateSyntaxProvider(
+            //        predicate: static (node, _) => IsInterfaceTarget(node),
+            //        transform: static (ctx, _) => GetInterfaceTarget(ctx)
+            //    )
+            //    .Collect();
+
             var interfaces = context
-                .SyntaxProvider.CreateSyntaxProvider(
-                    predicate: static (node, _) => IsInterfaceTarget(node),
-                    transform: static (ctx, _) => GetInterfaceTarget(ctx)
+                .SyntaxProvider.ForAttributeWithMetadataName(
+                    InterfaceExtensionAttribute,
+                    static (_, _) => true,
+                    (ctx, _) => GetInterfaceTarget(ctx)
                 )
                 .Collect();
 
@@ -34,8 +41,6 @@ namespace RepositoryGenerator.Generator
                     transform: static (ctx, _) => GetClassTarget(ctx)
                 )
                 .Collect();
-
-            var combined = interfaces.Combine(classes);
 
             context.RegisterSourceOutput(
                 interfaces,
@@ -48,35 +53,94 @@ namespace RepositoryGenerator.Generator
             );
 
             context.RegisterSourceOutput(
-                combined,
+                classes,
                 static (ctx, source) => BuildDIRegistration(ctx, source)
             );
         }
 
-        private static void BuildDIRegistration(
-            SourceProductionContext ctx,
-            (ImmutableArray<InterfaceToGenerate> Left, ImmutableArray<ClassToGenerate> Right) source
+        private static InterfaceToGenerate? GetInterfaceTarget(
+            GeneratorAttributeSyntaxContext context
         )
         {
-            var classList = source.Right;
+            var attributeSymbol = (INamedTypeSymbol)context.TargetSymbol;
+            if (attributeSymbol == null)
+            {
+                return null;
+            }
 
-            if (classList.IsDefaultOrEmpty)
+            var interfaceDeclarationSyntax = attributeSymbol
+                .DeclaringSyntaxReferences[0]
+                .GetSyntax();
+
+            //Hämta interface metadata
+
+            var interfaceSymbol = context.SemanticModel.GetDeclaredSymbol(
+                interfaceDeclarationSyntax
+            );
+
+            if (interfaceSymbol is null)
+            {
+                return null;
+            }
+
+            //Hämta attributet
+
+            var attribute = interfaceSymbol
+                .GetAttributes()
+                .FirstOrDefault(a =>
+                    a.AttributeClass?.OriginalDefinition.ToDisplayString()
+                    == "RepositoryGenerator.Library.Attributes.RPInterfaceAttribute<T>"
+                );
+
+            if (attribute is null)
+            {
+                return null;
+            }
+
+            var typeArgument = attribute.AttributeClass?.TypeArguments.FirstOrDefault();
+            if (typeArgument is null)
+            {
+                return null;
+            }
+
+            var argumentName = typeArgument.Name;
+            var argumentUsingName = typeArgument.ContainingNamespace.ToDisplayString();
+
+            var interfaceName = interfaceSymbol.Name;
+            var interfaceNamespaceName = interfaceSymbol.ContainingNamespace.ToDisplayString();
+
+            var interfacedata = new InterfaceToGenerate(
+                interfaceNamespaceName,
+                interfaceName,
+                argumentName,
+                argumentUsingName
+            );
+
+            return interfacedata;
+        }
+
+        private static void BuildDIRegistration(
+            SourceProductionContext ctx,
+            ImmutableArray<ClassToGenerate> classes
+        )
+        {
+            if (classes.IsDefaultOrEmpty)
             {
                 return;
             }
 
             var usings = new HashSet<string> { "Microsoft.Extensions.DependencyInjection" };
 
-            foreach (var c in classList)
+            foreach (var item in classes)
             {
-                usings.Add(c.ClassNamespaceName);
-                usings.Add(c.InterfaceUsingNamespace);
+                usings.Add(item.ClassNamespaceName);
+                usings.Add(item.InterfaceUsingNamespace);
             }
 
             var sb = new StringBuilder();
 
-            foreach (var u in usings.OrderBy(x => x))
-                sb.AppendLine($"using {u};");
+            foreach (var item in usings.OrderBy(x => x))
+                sb.AppendLine($"using {item};");
 
             sb.AppendLine();
             sb.AppendLine("public static class ServiceCollectionExtensions");
@@ -86,7 +150,7 @@ namespace RepositoryGenerator.Generator
             );
             sb.AppendLine("    {");
 
-            foreach (var c in classList)
+            foreach (var c in classes)
             {
                 sb.AppendLine($"        services.AddScoped<{c.InterfaceName}, {c.ClassName}>();");
             }
@@ -95,7 +159,7 @@ namespace RepositoryGenerator.Generator
             sb.AppendLine("    }");
             sb.AppendLine("}");
 
-            ctx.AddSource("ServiceCollectionExtensions.g.cs", sb.ToString());
+            ctx.AddSource("AddRepositories.g.cs", sb.ToString());
         }
 
         #region class stuff
@@ -148,8 +212,6 @@ namespace RepositoryGenerator.Generator
             {
                 return null;
             }
-
-            //get attribute data
 
             var attribute = classSymbol
                 .GetAttributes()
@@ -207,19 +269,21 @@ namespace RepositoryGenerator.Generator
                 "Microsoft.EntityFrameworkCore.DbSet`1"
             );
 
-            var dbsetSymbol = dbContextArgument
+            var propertyName = dbContextArgument
                 .GetMembers()
                 .OfType<IPropertySymbol>()
-                .FirstOrDefault(p =>
+                .Where(p =>
                     p.Type is INamedTypeSymbol namedType
                     && SymbolEqualityComparer.Default.Equals(
                         namedType.OriginalDefinition,
                         dbSetSymbol
                     )
-                    && p.Type.TypeKind == entity.TypeKind
-                );
+                    && SymbolEqualityComparer.Default.Equals(namedType.TypeArguments[0], entity)
+                )
+                .Select(p => p.Name)
+                .FirstOrDefault();
 
-            var dbsetName = dbsetSymbol.Name;
+            var dbsetName = propertyName;
 
             var dbArgumentName = dbContextArgument.Name;
             var dbArgumentUsing = dbContextArgument.ContainingNamespace.ToDisplayString();
@@ -290,70 +354,64 @@ namespace RepositoryGenerator.Generator
             return false;
         }
 
-        private static InterfaceToGenerate? GetInterfaceTarget(GeneratorSyntaxContext context)
-        {
-            //Se om den har attributet
-            var attributeSymbol = context.SemanticModel.Compilation.GetTypeByMetadataName(
-                InterfaceExtensionAttribute
-            );
+        //private static InterfaceToGenerate? GetInterfaceTarget(GeneratorSyntaxContext context)
+        //{
+        //    //Se om den har attributet
+        //    var attributeSymbol = context.SemanticModel.Compilation.GetTypeByMetadataName(
+        //        InterfaceExtensionAttribute
+        //    );
 
-            if (attributeSymbol == null)
-            {
-                return null;
-            }
+        //    if (attributeSymbol == null)
+        //    {
+        //        return null;
+        //    }
 
-            //Hämta interface metadata
-            var interfaceDeclarationSyntax = (InterfaceDeclarationSyntax)context.Node;
-            var interfaceSymbol = context.SemanticModel.GetDeclaredSymbol(
-                interfaceDeclarationSyntax
-            );
+        //    //Hämta interface metadata
+        //    var interfaceDeclarationSyntax = (InterfaceDeclarationSyntax)context.Node;
+        //    var interfaceSymbol = context.SemanticModel.GetDeclaredSymbol(
+        //        interfaceDeclarationSyntax
+        //    );
 
-            if (interfaceSymbol is null)
-            {
-                return null;
-            }
+        //    if (interfaceSymbol is null)
+        //    {
+        //        return null;
+        //    }
 
-            //Hämta attributet
+        //    //Hämta attributet
 
-            var attribute = interfaceSymbol
-                .GetAttributes()
-                .FirstOrDefault(a =>
-                    a.AttributeClass?.OriginalDefinition.ToDisplayString()
-                    == "RepositoryGenerator.Library.Attributes.RPInterfaceAttribute<T>"
-                );
+        //    var attribute = interfaceSymbol
+        //        .GetAttributes()
+        //        .FirstOrDefault(a =>
+        //            a.AttributeClass?.OriginalDefinition.ToDisplayString()
+        //            == "RepositoryGenerator.Library.Attributes.RPInterfaceAttribute<T>"
+        //        );
 
-            //var attribute = interfaceSymbol
-            //    .GetAttributes()
-            //    .FirstOrDefault(a =>
-            //        a.AttributeClass?.ToDisplayString() == InterfaceExtensionAttribute
-            //    );
+        //    if (attribute is null)
+        //    {
+        //        return null;
+        //    }
 
-            if (attribute is null)
-            {
-                return null;
-            }
+        //    var typeArgument = attribute.AttributeClass?.TypeArguments.FirstOrDefault();
+        //    if (typeArgument is null)
+        //    {
+        //        return null;
+        //    }
 
-            var typeArgument = attribute.AttributeClass?.TypeArguments.FirstOrDefault();
-            if (typeArgument is null)
-            {
-                return null;
-            }
+        //    var argumentName = typeArgument.Name;
+        //    var argumentUsingName = typeArgument.ContainingNamespace.ToDisplayString();
 
-            var argumentName = typeArgument.Name;
-            var argumentUsingName = typeArgument.ContainingNamespace.ToDisplayString();
+        //    var interfaceName = interfaceSymbol.Name;
+        //    var interfaceNamespaceName = interfaceSymbol.ContainingNamespace.ToDisplayString();
 
-            var interfaceName = interfaceSymbol.Name;
-            var interfaceNamespaceName = interfaceSymbol.ContainingNamespace.ToDisplayString();
+        //    var interfacedata = new InterfaceToGenerate(
+        //        interfaceNamespaceName,
+        //        interfaceName,
+        //        argumentName,
+        //        argumentUsingName
+        //    );
 
-            var interfacedata = new InterfaceToGenerate(
-                interfaceNamespaceName,
-                interfaceName,
-                argumentName,
-                argumentUsingName
-            );
-
-            return interfacedata;
-        }
+        //    return interfacedata;
+        //}
         #endregion
     }
 }

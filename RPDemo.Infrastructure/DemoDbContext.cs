@@ -9,6 +9,7 @@ namespace RPDemo.Infrastructure
             : base(options) { }
 
         public DbSet<Person> Persons { get; set; }
+        public DbSet<Car> Cars { get; set; }
 
         protected DemoDbContext() { }
     }
