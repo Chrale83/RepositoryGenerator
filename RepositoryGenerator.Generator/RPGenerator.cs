@@ -203,6 +203,14 @@ namespace RepositoryGenerator.Generator
                 return null;
             }
 
+            var isPartial = classSymbol.DeclaringSyntaxReferences.Any(syntax => syntax.GetSyntax() is BaseTypeDeclarationSyntax declaration && declaration.Modifiers.Any(modifier => modifier.IsKind(Microsoft.CodeAnalysis.CSharp.SyntaxKind.PartialKeyword)));
+
+            if (!isPartial)
+            {
+                return null;
+            }
+
+
             if (attributeSymbol is null)
             {
                 return null;
