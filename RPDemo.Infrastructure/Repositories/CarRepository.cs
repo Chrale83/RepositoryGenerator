@@ -7,6 +7,6 @@ using RPDemo.Domain.Entities;
 
 namespace RPDemo.Infrastructure.Repositories
 {
-    [RPClass<Car, DemoDbContext>]
+    [RepositoryFor<Car, DemoDbContext>]
     public partial class CarRepository : ICarRepo { }
 }

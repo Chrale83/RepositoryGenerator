@@ -6,6 +6,6 @@ using RPDemo.Domain.Entities;
 
 namespace RPDemo.Application.Interfaces
 {
-    [RPInterface<Car>]
+    [DbRepository<Car>]
     public partial interface ICarRepo { }
 }

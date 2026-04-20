@@ -20,13 +20,6 @@ namespace RepositoryGenerator.Generator
 
         public void Initialize(IncrementalGeneratorInitializationContext context)
         {
-            //var interfaces = context
-            //    .SyntaxProvider.CreateSyntaxProvider(
-            //        predicate: static (node, _) => IsInterfaceTarget(node),
-            //        transform: static (ctx, _) => GetInterfaceTarget(ctx)
-            //    )
-            //    .Collect();
-
             var interfaces = context
                 .SyntaxProvider.ForAttributeWithMetadataName(
                     InterfaceExtensionAttribute,
@@ -72,8 +65,6 @@ namespace RepositoryGenerator.Generator
                 .DeclaringSyntaxReferences[0]
                 .GetSyntax();
 
-            //Hämta interface metadata
-
             var interfaceSymbol = context.SemanticModel.GetDeclaredSymbol(
                 interfaceDeclarationSyntax
             );
@@ -82,8 +73,6 @@ namespace RepositoryGenerator.Generator
             {
                 return null;
             }
-
-            //Hämta attributet
 
             var attribute = interfaceSymbol
                 .GetAttributes()
