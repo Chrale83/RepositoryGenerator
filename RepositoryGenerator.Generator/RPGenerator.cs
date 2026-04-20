@@ -1,4 +1,5 @@
 ﻿using System.Collections.Immutable;
+using System.Diagnostics;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using RepositoryGenerator.Generator.Helpers;
@@ -18,14 +19,14 @@ namespace RepositoryGenerator.Generator
                 .SyntaxProvider.ForAttributeWithMetadataName(
                     InterfaceExtensionAttribute,
                     static (_, _) => true,
-                    (ctx, _) => InterfaceHelper.GetInterfaceTarget(ctx)
+                    (ctx, _) => InterfaceTargetParser.TryParse(ctx)
                 )
                 .Collect();
 
             var classes = context
                 .SyntaxProvider.CreateSyntaxProvider(
                     predicate: static (node, _) => IsClassTarget(node),
-                    transform: static (ctx, _) => ClassHelper.GetClassTarget(ctx)
+                    transform: static (ctx, _) => RepositoryTargetParser.TryParse(ctx)
                 )
                 .Collect();
 
@@ -47,16 +48,20 @@ namespace RepositoryGenerator.Generator
 
         private static void ExecuteDIRegistration(
             SourceProductionContext ctx,
-            ImmutableArray<ClassToGenerate> classes
+            ImmutableArray<ClassToGenerate?> classes
         )
         {
             if (classes.IsDefaultOrEmpty)
             {
                 return;
             }
+
             var source = CodeWriter.WriteDIRegistration(classes);
 
-            ctx.AddSource(source.FileName, source.Code);
+            if (source is not null)
+            {
+                ctx.AddSource(source.FileName, source.Code);
+            }
         }
 
         private static void ExecuteClass(
@@ -64,11 +69,6 @@ namespace RepositoryGenerator.Generator
             ImmutableArray<ClassToGenerate?> classes
         )
         {
-            if (classes == null)
-            {
-                return;
-            }
-
             foreach (var classToGenerate in classes)
             {
                 if (classToGenerate is null)
@@ -84,12 +84,8 @@ namespace RepositoryGenerator.Generator
 
         private static bool IsClassTarget(SyntaxNode node)
         {
-            if (node is ClassDeclarationSyntax classDeclaration)
-            {
-                var hasAttributes = classDeclaration.AttributeLists.Count > 0;
-                return hasAttributes;
-            }
-            return false;
+            return node is ClassDeclarationSyntax classDeclarationSyntax
+                && classDeclarationSyntax.AttributeLists.Count > 0;
         }
 
         private static void ExecuteInterface(
@@ -97,11 +93,6 @@ namespace RepositoryGenerator.Generator
             ImmutableArray<InterfaceToGenerate?> interfaces
         )
         {
-            if (interfaces == null)
-            {
-                return;
-            }
-
             foreach (var interfaceToGenerate in interfaces)
             {
                 if (interfaceToGenerate is null)

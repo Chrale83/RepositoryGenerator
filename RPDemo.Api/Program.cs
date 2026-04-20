@@ -4,7 +4,7 @@ using RPDemo.Infrastructure;
 
 ServiceCollection services = new();
 
-services.AddGeneratedServices();
+services.AddGeneratedRepositories();
 
 services.AddDbContext<DemoDbContext>(options => options.UseInMemoryDatabase("Demo"));
 

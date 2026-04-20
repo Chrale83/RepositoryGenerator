@@ -6,12 +6,12 @@ using RepositoryGenerator.Generator.Models;
 
 namespace RepositoryGenerator.Generator.Helpers
 {
-    internal static class ClassHelper
+    internal static class RepositoryTargetParser
     {
         private const string ClassExtensionAttribute =
             "RepositoryGenerator.Library.Attributes.DbRepositoryForAttribute`2";
 
-        internal static ClassToGenerate? GetClassTarget(GeneratorSyntaxContext context)
+        internal static ClassToGenerate? TryParse(GeneratorSyntaxContext context)
         {
             //KOlla om den har rätt attribut
             var classDeclarationSyntax = (ClassDeclarationSyntax)context.Node;
@@ -84,6 +84,11 @@ namespace RepositoryGenerator.Generator.Helpers
 
             var className = classSymbol.Name;
             var classNamespace = classSymbol.ContainingNamespace.ToDisplayString();
+
+            if (attribute.AttributeClass is null)
+            {
+                return null;
+            }
 
             var dbContextArgument = attribute.AttributeClass.TypeArguments[1];
             // Need to get the database name for the entity

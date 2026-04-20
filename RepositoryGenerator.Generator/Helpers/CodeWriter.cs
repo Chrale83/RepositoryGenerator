@@ -2,7 +2,6 @@
 using System.Collections.Immutable;
 using System.Linq;
 using System.Text;
-using Microsoft.CodeAnalysis;
 using RepositoryGenerator.Generator.Models;
 
 namespace RepositoryGenerator.Generator.Helpers
@@ -106,12 +105,16 @@ namespace {classNamespaceName}
             return new Source(stringBuilder.ToString(), fileName);
         }
 
-        internal static Source? WriteDIRegistration(ImmutableArray<ClassToGenerate> classes)
+        internal static Source? WriteDIRegistration(ImmutableArray<ClassToGenerate?> classes)
         {
             var usings = new HashSet<string> { "Microsoft.Extensions.DependencyInjection" };
 
             foreach (var item in classes)
             {
+                if (item is null)
+                {
+                    continue;
+                }
                 usings.Add(item.ClassNamespaceName);
                 usings.Add(item.InterfaceUsingNamespace);
             }
@@ -125,12 +128,16 @@ namespace {classNamespaceName}
             sb.AppendLine("public static class ServiceCollectionExtensions");
             sb.AppendLine("{");
             sb.AppendLine(
-                "    public static IServiceCollection AddGeneratedServices(this IServiceCollection services)"
+                "    public static IServiceCollection AddGeneratedRepositories(this IServiceCollection services)"
             );
             sb.AppendLine("    {");
 
             foreach (var c in classes)
             {
+                if (c is null)
+                {
+                    continue;
+                }
                 sb.AppendLine($"        services.AddScoped<{c.InterfaceName}, {c.ClassName}>();");
             }
 

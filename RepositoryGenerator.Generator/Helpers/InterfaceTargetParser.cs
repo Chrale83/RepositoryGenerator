@@ -4,11 +4,9 @@ using RepositoryGenerator.Generator.Models;
 
 namespace RepositoryGenerator.Generator.Helpers
 {
-    internal static class InterfaceHelper
+    internal static class InterfaceTargetParser
     {
-        internal static InterfaceToGenerate? GetInterfaceTarget(
-            GeneratorAttributeSyntaxContext context
-        )
+        internal static InterfaceToGenerate? TryParse(GeneratorAttributeSyntaxContext context)
         {
             var attributeSymbol = (INamedTypeSymbol)context.TargetSymbol;
             if (attributeSymbol == null)
