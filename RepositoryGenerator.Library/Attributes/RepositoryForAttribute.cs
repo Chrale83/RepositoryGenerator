@@ -3,9 +3,11 @@
 namespace RepositoryGenerator.Library.Attributes
 {
     [AttributeUsage(AttributeTargets.Class)]
-    public class RepositoryForAttribute<T, DB> : Attribute
+    public class RepositoryForAttribute<T, TDbContext> : Attribute
+        where T : class
+        where TDbContext : class
     {
-        public Type Entity { get; } = typeof(T);
-        public Type DbContext { get; } = typeof(DB);
+        public Type Entity => typeof(T);
+        public Type DbContext => typeof(TDbContext);
     }
 }
