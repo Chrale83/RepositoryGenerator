@@ -3,6 +3,6 @@ using RPDemo.Domain.Entities;
 
 namespace RPDemo.Application.Interfaces
 {
-    [DbRepository<Person>]
+    [RepositoryFor<Person>]
     public partial interface IPersonRepo { }
 }

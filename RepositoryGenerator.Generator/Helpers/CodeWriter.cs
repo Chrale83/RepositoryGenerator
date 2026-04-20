@@ -1,4 +1,8 @@
-﻿using System.Text;
+﻿using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.Linq;
+using System.Text;
+using Microsoft.CodeAnalysis;
 using RepositoryGenerator.Generator.Models;
 
 namespace RepositoryGenerator.Generator.Helpers
@@ -100,6 +104,41 @@ namespace {classNamespaceName}
             );
 
             return new Source(stringBuilder.ToString(), fileName);
+        }
+
+        internal static Source? WriteDIRegistration(ImmutableArray<ClassToGenerate> classes)
+        {
+            var usings = new HashSet<string> { "Microsoft.Extensions.DependencyInjection" };
+
+            foreach (var item in classes)
+            {
+                usings.Add(item.ClassNamespaceName);
+                usings.Add(item.InterfaceUsingNamespace);
+            }
+
+            var sb = new StringBuilder();
+
+            foreach (var item in usings.OrderBy(x => x))
+                sb.AppendLine($"using {item};");
+
+            sb.AppendLine();
+            sb.AppendLine("public static class ServiceCollectionExtensions");
+            sb.AppendLine("{");
+            sb.AppendLine(
+                "    public static IServiceCollection AddGeneratedServices(this IServiceCollection services)"
+            );
+            sb.AppendLine("    {");
+
+            foreach (var c in classes)
+            {
+                sb.AppendLine($"        services.AddScoped<{c.InterfaceName}, {c.ClassName}>();");
+            }
+
+            sb.AppendLine("        return services;");
+            sb.AppendLine("    }");
+            sb.AppendLine("}");
+
+            return new Source(sb.ToString(), "AddRepositories.g.cs");
         }
     }
 
