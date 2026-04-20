@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.Immutable;
-using System.Linq;
-using System.Text;
+﻿using System.Collections.Immutable;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using RepositoryGenerator.Generator.Helpers;
@@ -14,7 +10,7 @@ namespace RepositoryGenerator.Generator
     internal class RPGenerator : IIncrementalGenerator
     {
         private const string InterfaceExtensionAttribute =
-            "RepositoryGenerator.Library.Attributes.RPInterfaceAttribute`1";
+            "RepositoryGenerator.Library.Attributes.RepositoryForAttribute`1";
 
         public void Initialize(IncrementalGeneratorInitializationContext context)
         {

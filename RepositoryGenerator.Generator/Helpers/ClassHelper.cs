@@ -9,7 +9,7 @@ namespace RepositoryGenerator.Generator.Helpers
     internal static class ClassHelper
     {
         private const string ClassExtensionAttribute =
-            "RepositoryGenerator.Library.Attributes.RPClassAttribute`2";
+            "RepositoryGenerator.Library.Attributes.DbRepositoryForAttribute`2";
 
         internal static ClassToGenerate? GetClassTarget(GeneratorSyntaxContext context)
         {
