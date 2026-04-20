@@ -17,9 +17,7 @@ namespace RepositoryGenerator.Generator.Helpers
 
             var fileName = $"{interfaceNamespaceName}.{interfaceName}.g.cs";
 
-            var stringBuilder = new StringBuilder();
-
-            stringBuilder.Append(
+            var code =
                 $@"
 using {argumentUsing};
 
@@ -34,12 +32,8 @@ namespace {interfaceNamespaceName}
         Task Delete({argumentTypeName} entity);
     }}
 
-}}
-
-"
-            );
-
-            return new Source(stringBuilder.ToString(), fileName);
+}}";
+            return new Source(code, fileName);
         }
 
         public static Source WriteRepoClass(ClassToGenerate classToGenerate)

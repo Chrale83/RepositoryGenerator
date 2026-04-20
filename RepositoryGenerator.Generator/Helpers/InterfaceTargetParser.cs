@@ -31,7 +31,7 @@ namespace RepositoryGenerator.Generator.Helpers
                 .GetAttributes()
                 .FirstOrDefault(a =>
                     a.AttributeClass?.OriginalDefinition.ToDisplayString()
-                    == "RepositoryGenerator.Library.Attributes.RPInterfaceAttribute<T>"
+                    == "RepositoryGenerator.Library.Attributes.RepositoryForAttribute<T>"
                 );
 
             if (attribute is null)
