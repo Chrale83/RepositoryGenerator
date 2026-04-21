@@ -76,7 +76,7 @@ namespace RepositoryGenerator.Generator
                     continue;
                 }
 
-                var source = CodeWriter.WriteRepoClass(classToGenerate);
+                var source = CodeWriter.WriteRepositoryClass(classToGenerate);
 
                 context.AddSource(source.FileName, source.Code);
             }
@@ -99,7 +99,7 @@ namespace RepositoryGenerator.Generator
                 {
                     continue;
                 }
-                var source = CodeWriter.WriteInterface(interfaceToGenerate);
+                var source = CodeWriter.WriteRepositoryInterface(interfaceToGenerate);
 
                 context.AddSource(source.FileName, source.Code);
             }

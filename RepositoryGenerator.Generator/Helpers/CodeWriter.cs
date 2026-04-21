@@ -8,7 +8,7 @@ namespace RepositoryGenerator.Generator.Helpers
 {
     internal static class CodeWriter
     {
-        public static Source WriteInterface(InterfaceToGenerate interfaceToGenerate)
+        public static Source WriteRepositoryInterface(InterfaceToGenerate interfaceToGenerate)
         {
             var interfaceNamespaceName = interfaceToGenerate.NamespaceName;
             var interfaceName = interfaceToGenerate.InterfaceName;
@@ -36,7 +36,7 @@ namespace {interfaceNamespaceName}
             return new Source(code, fileName);
         }
 
-        public static Source WriteRepoClass(ClassToGenerate classToGenerate)
+        public static Source WriteRepositoryClass(ClassToGenerate classToGenerate)
         {
             var classNamespaceName = classToGenerate.ClassNamespaceName;
             var className = classToGenerate.ClassName;
@@ -52,7 +52,7 @@ namespace {interfaceNamespaceName}
             var fileName = $"{classNamespaceName}.{className}.g.cs";
             var stringBuilder = new StringBuilder();
 
-            stringBuilder.Append(
+            var code =
                 $@"
 using {entityUsingName};
 using {interfaceUsingNamespace};
@@ -92,11 +92,9 @@ namespace {classNamespaceName}
          }}
      }}
 }}
+";
 
-"
-            );
-
-            return new Source(stringBuilder.ToString(), fileName);
+            return new Source(code, fileName);
         }
 
         internal static Source? WriteDIRegistration(ImmutableArray<ClassToGenerate?> classes)
