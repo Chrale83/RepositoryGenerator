@@ -39,14 +39,14 @@ namespace {interfaceNamespaceName}
         {
             var classNamespaceName = classToGenerate.ClassNamespaceName;
             var className = classToGenerate.ClassName;
-            var entityName = classToGenerate.EntityName;
-            var entityUsingName = classToGenerate.EntityUsingName;
-            var dbContextUsingName = classToGenerate.DbContextUsingName;
-            var dbCOntextName = classToGenerate.DbContextName;
+            var entityName = classToGenerate.EntityData.EntityName;
+            var entityUsingName = classToGenerate.EntityData.EntityUsingName;
+            var dbContextUsingName = classToGenerate.DbForClassToGenerate.DbContextUsingName;
+            var dbContextName = classToGenerate.DbForClassToGenerate.DbArgumentName;
             var interfaceName = classToGenerate.InterfaceName;
             var interfaceUsingNamespace = classToGenerate.InterfaceUsingNamespace;
-            var dbSetName = classToGenerate.DbSetName;
-            var primaryKey = classToGenerate.EntityPrimaryKey;
+            var dbSetName = classToGenerate.DbForClassToGenerate.DbSetName;
+            var primaryKey = classToGenerate.EntityData.EntityPrimaryKey;
 
             var fileName = $"{classNamespaceName}.{className}.g.cs";
 
@@ -59,9 +59,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace {classNamespaceName}
 {{
-     public partial class {className}({dbCOntextName} context) : {interfaceName}
+     public partial class {className}({dbContextName} context) : {interfaceName}
      {{
-         public async Task<{entityName}> GetById(int id)
+         public async Task<{entityName}?> GetById(int id)
          {{
                  return await context.{dbSetName}.FirstOrDefaultAsync(x => x.{primaryKey} == id);
          }}
