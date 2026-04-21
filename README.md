@@ -58,12 +58,12 @@ public class AppDbContext : DbContext
 
 ### 3. Declare a partial interface with `[RPInterface]`
 
-Mark your repository interface with `[RPInterfaceAttribute<TEntity>]`. The generator will fill in the CRUD method signatures.
+Mark your repository interface with `[RepositoryForAttribute <TEntity>]`. The generator will fill in the CRUD method signatures.
 
 ```csharp
 using RepositoryGenerator.Library.Attributes;
 
-[RPInterface<Product>]
+[RepositoryForAttribute <Product>]
 public partial interface IProductRepository
 {
 }
@@ -84,12 +84,12 @@ public partial interface IProductRepository
 
 ### 4. Declare a partial class with `[RPClass]`
 
-Mark your repository class with `[RPClassAttribute<TEntity, TDbContext>]`. The class must implement your interface. The generator fills in the method bodies.
+Mark your repository class with `[DbRepositoryForAttribute <TEntity, TDbContext>]`. The class must implement your interface. The generator fills in the method bodies.
 
 ```csharp
 using RepositoryGenerator.Library.Attributes;
 
-[RPClass<Product, AppDbContext>]
+[DbRepositoryForAttribute <Product, AppDbContext>]
 public partial class ProductRepository : IProductRepository
 {
 }
@@ -185,18 +185,18 @@ public class ShopDbContext : DbContext
 }
 
 // Interface (partial — generator fills in the methods)
-[RPInterface<Order>]
+[RepositoryForAttribute <Order>]
 public partial interface IOrderRepository { }
 
 // Class (partial — generator fills in the implementation)
-[RPClass<Order, ShopDbContext>]
+[DbRepositoryForAttribute <Order, ShopDbContext>]
 public partial class OrderRepository : IOrderRepository { }
 
 // Program.cs
 builder.Services.AddDbContext<ShopDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("Default")));
 
-builder.Services.AddGeneratedServices();
+builder.Services.AddGeneratedRepositories();
 
 // Usage in a controller or service
 public class OrderService(IOrderRepository repository)
