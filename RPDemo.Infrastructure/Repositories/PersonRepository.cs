@@ -4,6 +4,6 @@ using RPDemo.Domain.Entities;
 
 namespace RPDemo.Infrastructure.Repositories
 {
-    [RPClass<Person, DemoDbContext>]
+    [DbRepositoryFor<Person, DemoDbContext>]
     public partial class PersonRepository : IPersonRepo { }
 }

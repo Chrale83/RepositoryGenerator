@@ -2,7 +2,8 @@
 
 namespace RepositoryGenerator.Generator.Models
 {
-    public class ClassToGenerate(
+#pragma warning disable S107
+    public sealed class ClassToGenerate(
         string namespaceName,
         string className,
         string entityUsingName,
@@ -14,6 +15,7 @@ namespace RepositoryGenerator.Generator.Models
         string entityPrimaryKey,
         string dbSetName
     ) : IEquatable<ClassToGenerate>
+#pragma warning restore S107
     {
         public string ClassNamespaceName { get; } = namespaceName;
         public string ClassName { get; } = className;

@@ -1,11 +1,14 @@
-﻿using System.Text;
+﻿using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.Linq;
+using System.Text;
 using RepositoryGenerator.Generator.Models;
 
 namespace RepositoryGenerator.Generator.Helpers
 {
     internal static class CodeWriter
     {
-        public static Source WriteInterface(InterfaceToGenerate interfaceToGenerate)
+        public static Source WriteRepositoryInterface(InterfaceToGenerate interfaceToGenerate)
         {
             var interfaceNamespaceName = interfaceToGenerate.NamespaceName;
             var interfaceName = interfaceToGenerate.InterfaceName;
@@ -14,9 +17,7 @@ namespace RepositoryGenerator.Generator.Helpers
 
             var fileName = $"{interfaceNamespaceName}.{interfaceName}.g.cs";
 
-            var stringBuilder = new StringBuilder();
-
-            stringBuilder.Append(
+            var code =
                 $@"
 using {argumentUsing};
 
@@ -31,15 +32,11 @@ namespace {interfaceNamespaceName}
         Task Delete({argumentTypeName} entity);
     }}
 
-}}
-
-"
-            );
-
-            return new Source(stringBuilder.ToString(), fileName);
+}}";
+            return new Source(code, fileName);
         }
 
-        public static Source WriteRepoClass(ClassToGenerate classToGenerate)
+        public static Source WriteRepositoryClass(ClassToGenerate classToGenerate)
         {
             var classNamespaceName = classToGenerate.ClassNamespaceName;
             var className = classToGenerate.ClassName;
@@ -55,7 +52,7 @@ namespace {interfaceNamespaceName}
             var fileName = $"{classNamespaceName}.{className}.g.cs";
             var stringBuilder = new StringBuilder();
 
-            stringBuilder.Append(
+            var code =
                 $@"
 using {entityUsingName};
 using {interfaceUsingNamespace};
@@ -95,11 +92,52 @@ namespace {classNamespaceName}
          }}
      }}
 }}
+";
 
-"
+            return new Source(code, fileName);
+        }
+
+        internal static Source? WriteDIRegistration(ImmutableArray<ClassToGenerate?> classes)
+        {
+            var usings = new HashSet<string> { "Microsoft.Extensions.DependencyInjection" };
+
+            foreach (var item in classes)
+            {
+                if (item is null)
+                {
+                    continue;
+                }
+                usings.Add(item.ClassNamespaceName);
+                usings.Add(item.InterfaceUsingNamespace);
+            }
+
+            var sb = new StringBuilder();
+
+            foreach (var item in usings.OrderBy(x => x))
+                sb.AppendLine($"using {item};");
+
+            sb.AppendLine();
+            sb.AppendLine("public static class ServiceCollectionExtensions");
+            sb.AppendLine("{");
+            sb.AppendLine(
+                "    public static IServiceCollection AddGeneratedRepositories(this IServiceCollection services)"
             );
+            sb.AppendLine("    {");
 
-            return new Source(stringBuilder.ToString(), fileName);
+            foreach (var c in classes)
+            {
+                if (c is null)
+                {
+                    continue;
+                }
+                sb.AppendLine($"        services.AddScoped<{c.InterfaceName}, {c.ClassName}>();");
+            }
+
+            sb.AppendLine("        return services;");
+            sb.AppendLine("    }");
+            sb.AppendLine("}");
+
+            return new Source(sb.ToString(), "AddRepositories.g.cs");
         }
     }
 
