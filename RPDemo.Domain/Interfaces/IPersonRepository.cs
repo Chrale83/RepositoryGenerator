@@ -1,8 +1,8 @@
 ﻿using RepositoryGenerator.Library.Attributes;
 using RPDemo.Domain.Entities;
 
-namespace RPDemo.Application.Interfaces
+namespace RPDemo.Domain.Interfaces
 {
     [RepositoryFor<Person>]
-    public partial interface IPersonRepo { }
+    public partial interface IPersonRepository { }
 }

@@ -7,6 +7,7 @@
   </Folder>
   <Folder Name="/Solution Items/">
     <File Path=".gitignore" />
+    <File Path="README.md" />
   </Folder>
   <Project Path="RepositoryGenerator.Generator/RepositoryGenerator.Generator.csproj" />
   <Project Path="RepositoryGenerator.Library/RepositoryGenerator.Library.csproj" />

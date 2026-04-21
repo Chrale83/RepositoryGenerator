@@ -13,7 +13,7 @@ namespace RepositoryGenerator.Generator.Helpers
 
         internal static ClassToGenerate? TryParse(GeneratorSyntaxContext context)
         {
-            //KOlla om den har rätt attribut
+            //Check if correct attribute
             var classDeclarationSyntax = (ClassDeclarationSyntax)context.Node;
 
             var attributeSymbol = context.SemanticModel.Compilation.GetTypeByMetadataName(
@@ -124,18 +124,15 @@ namespace RepositoryGenerator.Generator.Helpers
             }
             var interfaceName = interfaceType.Name;
             var interfaceUsing = interfaceType.ContainingNamespace.ToDisplayString();
-
+            var dbData = new DbData(dbsetName, dbArgumentName, dbArgumentUsing);
+            var entityData = new EntityData(entityUsingName, entityName, entityPrimaryKey);
             return new ClassToGenerate(
                 classNamespace,
                 className,
-                entityUsingName,
-                entityName,
-                dbArgumentUsing,
-                dbArgumentName,
                 interfaceName,
                 interfaceUsing,
-                entityPrimaryKey,
-                dbsetName
+                entityData,
+                dbData
             );
         }
     }
