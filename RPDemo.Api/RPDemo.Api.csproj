@@ -16,6 +16,7 @@
     <ProjectReference Include="..\RepositoryGenerator.Generator\RepositoryGenerator.Generator.csproj" />
     <ProjectReference Include="..\RepositoryGenerator.Library\RepositoryGenerator.Library.csproj" />
     <ProjectReference Include="..\RPDemo.Application\RPDemo.Application.csproj" />
+    <ProjectReference Include="..\RPDemo.Domain\RPDemo.Domain.csproj" />
     <ProjectReference Include="..\RPDemo.Infrastructure\RPDemo.Infrastructure.csproj" />
   </ItemGroup>
 

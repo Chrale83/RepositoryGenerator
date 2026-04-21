@@ -4,13 +4,13 @@
       "commandName": "DebugRoslynComponent",
       "targetProject": "..\\RPDemo.Api\\RPDemo.Api.csproj"
     },
-    " Debug Application": {
-      "commandName": "DebugRoslynComponent",
-      "targetProject": "..\\RPDemo.Application\\RPDemo.Application.csproj"
-    },
     " Debug Infrastructure": {
       "commandName": "DebugRoslynComponent",
       "targetProject": "..\\RPDemo.Infrastructure\\RPDemo.Infrastructure.csproj"
+    },
+    " Debug Domain": {
+      "commandName": "DebugRoslynComponent",
+      "targetProject": "..\\RPDemo.Domain\\RPDemo.Domain.csproj"
     }
   }
 }

@@ -13,7 +13,7 @@ namespace RepositoryGenerator.Generator.Helpers
 
         internal static ClassToGenerate? TryParse(GeneratorSyntaxContext context)
         {
-            //KOlla om den har rätt attribut
+            //Check if correct attribute
             var classDeclarationSyntax = (ClassDeclarationSyntax)context.Node;
 
             var attributeSymbol = context.SemanticModel.Compilation.GetTypeByMetadataName(

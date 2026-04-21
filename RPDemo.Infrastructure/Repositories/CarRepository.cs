@@ -1,12 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using RepositoryGenerator.Library.Attributes;
-using RPDemo.Application.Interfaces;
+﻿using RepositoryGenerator.Library.Attributes;
 using RPDemo.Domain.Entities;
+using RPDemo.Domain.Interfaces;
 
 namespace RPDemo.Infrastructure.Repositories
 {
     [DbRepositoryFor<Car, DemoDbContext>]
-    public partial class CarRepository : ICarRepo { }
+    public partial class CarRepository : ICarRepository { }
 }

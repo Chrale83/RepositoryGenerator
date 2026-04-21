@@ -12,8 +12,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\RepositoryGenerator.Generator\RepositoryGenerator.Generator.csproj" ReferenceOutputAssembly="false" OutputItemType="Analyzer" />
-    <ProjectReference Include="..\RepositoryGenerator.Library\RepositoryGenerator.Library.csproj" />
     <ProjectReference Include="..\RPDemo.Domain\RPDemo.Domain.csproj" />
   </ItemGroup>
 
