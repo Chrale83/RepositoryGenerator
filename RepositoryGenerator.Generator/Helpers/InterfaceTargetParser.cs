@@ -9,6 +9,7 @@ namespace RepositoryGenerator.Generator.Helpers
         internal static InterfaceToGenerate? TryParse(GeneratorAttributeSyntaxContext context)
         {
             var attributeSymbol = (INamedTypeSymbol)context.TargetSymbol;
+
             if (attributeSymbol == null)
             {
                 return null;
@@ -45,6 +46,8 @@ namespace RepositoryGenerator.Generator.Helpers
                 return null;
             }
 
+            var primaryKeyType = PrimaryKeyResolver.ResolvePrimaryKeyType(context, interfaceSymbol);
+
             var argumentName = typeArgument.Name;
             var argumentUsingName = typeArgument.ContainingNamespace.ToDisplayString();
 
@@ -55,7 +58,8 @@ namespace RepositoryGenerator.Generator.Helpers
                 interfaceNamespaceName,
                 interfaceName,
                 argumentName,
-                argumentUsingName
+                argumentUsingName,
+                primaryKeyType
             );
 
             return interfacedata;

@@ -4,6 +4,7 @@ using RPDemo.Domain.Interfaces;
 
 namespace RPDemo.Infrastructure.Repositories
 {
+    [PrimaryKeyIs("DemoPkId")]
     [DbRepositoryFor<Person, DemoDbContext>]
     public partial class PersonRepository : IPersonRepository { }
 }

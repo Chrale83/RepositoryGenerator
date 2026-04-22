@@ -11,7 +11,7 @@
 
 	<PropertyGroup>
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-		<Version>0.0.2</Version>
+		<Version>0.0.5</Version>
 		<AssemblyVersion>$(Version).0</AssemblyVersion>
 		<AssemblyFileVersion>$(Version).0</AssemblyFileVersion>
 		<Authors>Christian</Authors>

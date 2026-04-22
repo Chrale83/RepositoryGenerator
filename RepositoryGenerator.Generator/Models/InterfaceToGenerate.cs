@@ -6,13 +6,15 @@ namespace RepositoryGenerator.Generator.Models
         string interfaceNamespaceName,
         string interfaceName,
         string argumentName,
-        string argumentUsingName
+        string argumentUsingName,
+        string primaryKeyType
     ) : IEquatable<InterfaceToGenerate>
     {
         public string NamespaceName { get; } = interfaceNamespaceName;
         public string InterfaceName { get; } = interfaceName;
         public string ArgumentName { get; } = argumentName;
         public string ArgumentUsingName { get; } = argumentUsingName;
+        public string PrimaryKeyType { get; } = primaryKeyType;
 
         public override bool Equals(object? obj)
         {
