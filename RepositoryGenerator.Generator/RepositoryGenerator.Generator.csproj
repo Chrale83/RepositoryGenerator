@@ -11,14 +11,16 @@
 
 	<PropertyGroup>
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-		<Version>0.0.2</Version>
+		<Version>0.0.9</Version>
 		<AssemblyVersion>$(Version).0</AssemblyVersion>
 		<AssemblyFileVersion>$(Version).0</AssemblyFileVersion>
-		<Authors>Christian</Authors>
+		<Authors>Christian Alexandersson</Authors>
 		<Description>Exam project to generate Repository pattern</Description>
+		<PackageReadmeFile>README.md</PackageReadmeFile>
 	</PropertyGroup>
 
 	<ItemGroup>
+		<None Include="..\README.md" Pack="true" PackagePath="\" />
 		<PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="5.3.0">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>

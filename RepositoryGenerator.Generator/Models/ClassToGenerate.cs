@@ -82,12 +82,14 @@ namespace RepositoryGenerator.Generator.Models
     public sealed class EntityData(
         string entityUsingName,
         string entityName,
-        string entityPrimaryKey
+        string entityPrimaryKey,
+        string entityPrimaryKeyType
     ) : IEquatable<EntityData>
     {
         public string EntityUsingName { get; } = entityUsingName;
         public string EntityName { get; } = entityName;
         public string EntityPrimaryKey { get; } = entityPrimaryKey;
+        public string EnityPrimaryKeyType { get; } = entityPrimaryKeyType;
 
         public bool Equals(EntityData? other)
         {
@@ -95,7 +97,8 @@ namespace RepositoryGenerator.Generator.Models
                 return false;
             return EntityUsingName == other.EntityUsingName
                 && EntityName == other.EntityName
-                && EntityPrimaryKey == other.EntityPrimaryKey;
+                && EntityPrimaryKey == other.EntityPrimaryKey
+                && EnityPrimaryKeyType == other.EntityPrimaryKey;
         }
 
         public override bool Equals(object? obj) => Equals(obj as EntityData);
@@ -108,6 +111,7 @@ namespace RepositoryGenerator.Generator.Models
                 hash = hash * 31 + (EntityUsingName?.GetHashCode() ?? 0);
                 hash = hash * 31 + (EntityName?.GetHashCode() ?? 0);
                 hash = hash * 31 + (EntityPrimaryKey?.GetHashCode() ?? 0);
+                hash = hash * 31 + (EnityPrimaryKeyType?.GetHashCode() ?? 0);
                 return hash;
             }
         }

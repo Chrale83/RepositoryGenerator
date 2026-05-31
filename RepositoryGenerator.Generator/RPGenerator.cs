@@ -1,5 +1,5 @@
 ﻿using System.Collections.Immutable;
-using System.Diagnostics;
+using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using RepositoryGenerator.Generator.Helpers;
@@ -19,14 +19,14 @@ namespace RepositoryGenerator.Generator
                 .SyntaxProvider.ForAttributeWithMetadataName(
                     InterfaceExtensionAttribute,
                     static (_, _) => true,
-                    (ctx, _) => InterfaceTargetParser.TryParse(ctx)
+                    (ctx, _) => InterfaceTargetParser.Parse(ctx)
                 )
                 .Collect();
 
             var classes = context
                 .SyntaxProvider.CreateSyntaxProvider(
                     predicate: static (node, _) => IsClassTarget(node),
-                    transform: static (ctx, _) => RepositoryTargetParser.TryParse(ctx)
+                    transform: static (ctx, _) => RepositoryTargetParser.Parse(ctx)
                 )
                 .Collect();
 
@@ -84,8 +84,14 @@ namespace RepositoryGenerator.Generator
 
         private static bool IsClassTarget(SyntaxNode node)
         {
-            return node is ClassDeclarationSyntax classDeclarationSyntax
-                && classDeclarationSyntax.AttributeLists.Count > 0;
+            if (node is not ClassDeclarationSyntax c || c.AttributeLists.Count == 0)
+            {
+                return false;
+            }
+
+            return c.AttributeLists.Any(al =>
+                al.Attributes.Any(a => a.Name.ToString().Contains("DbRepositoryFor"))
+            );
         }
 
         private static void ExecuteInterface(

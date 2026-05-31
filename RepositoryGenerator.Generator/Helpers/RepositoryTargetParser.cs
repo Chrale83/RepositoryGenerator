@@ -1,5 +1,4 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using RepositoryGenerator.Generator.Models;
@@ -11,9 +10,8 @@ namespace RepositoryGenerator.Generator.Helpers
         private const string ClassExtensionAttribute =
             "RepositoryGenerator.Library.Attributes.DbRepositoryForAttribute`2";
 
-        internal static ClassToGenerate? TryParse(GeneratorSyntaxContext context)
+        internal static ClassToGenerate? Parse(GeneratorSyntaxContext context)
         {
-            //Check if correct attribute
             var classDeclarationSyntax = (ClassDeclarationSyntax)context.Node;
 
             var attributeSymbol = context.SemanticModel.Compilation.GetTypeByMetadataName(
@@ -28,12 +26,7 @@ namespace RepositoryGenerator.Generator.Helpers
                 return null;
             }
 
-            if (attributeSymbol is null)
-            {
-                return null;
-            }
-
-            if (classSymbol is null)
+            if (attributeSymbol is null || classSymbol is null)
             {
                 return null;
             }
@@ -53,31 +46,22 @@ namespace RepositoryGenerator.Generator.Helpers
             }
 
             var entity = attribute.AttributeClass?.TypeArguments.FirstOrDefault();
+
             if (entity is null)
             {
                 return null;
             }
+
             var entityName = entity.Name;
             var entityUsingName = entity.ContainingNamespace.ToDisplayString();
 
-            //Get the primarykey for the entity
+            var entityPrimaryKey = PrimaryKeyResolver.ResolvePrimaryKeyName(
+                context,
+                entity,
+                classSymbol
+            );
 
-            var conventionPrimaryKey = $"{entityName}Id";
-
-            var props = entity
-                .GetMembers()
-                .OfType<IPropertySymbol>()
-                .Where(p =>
-                    string.Equals(p.Name, conventionPrimaryKey, StringComparison.OrdinalIgnoreCase)
-                    || string.Equals(p.Name, "Id", StringComparison.OrdinalIgnoreCase)
-                )
-                .ToList();
-            var entityPrimaryKey = string.Empty;
-            if (props.Count == 1 && props[0].Type.SpecialType == SpecialType.System_Int32)
-            {
-                entityPrimaryKey = props[0].Name;
-            }
-            else
+            if (entityPrimaryKey is null)
             {
                 return null;
             }
@@ -91,15 +75,12 @@ namespace RepositoryGenerator.Generator.Helpers
             }
 
             var dbContextArgument = attribute.AttributeClass.TypeArguments[1];
-            // Need to get the database name for the entity
-            // Get the the properties from the DbContext
-            // Pick the one that is a propertytype of DbSet and have the selected entity, get the name of the dbset
 
             var dbSetSymbol = context.SemanticModel.Compilation.GetTypeByMetadataName(
                 "Microsoft.EntityFrameworkCore.DbSet`1"
             );
 
-            var propertyName = dbContextArgument
+            var dbsetName = dbContextArgument
                 .GetMembers()
                 .OfType<IPropertySymbol>()
                 .Where(p =>
@@ -113,19 +94,30 @@ namespace RepositoryGenerator.Generator.Helpers
                 .Select(p => p.Name)
                 .FirstOrDefault();
 
-            var dbsetName = propertyName;
-
-            var dbArgumentName = dbContextArgument.Name;
-            var dbArgumentUsing = dbContextArgument.ContainingNamespace.ToDisplayString();
             var interfaceType = classSymbol.Interfaces.FirstOrDefault();
+
             if (interfaceType is null)
             {
                 return null;
             }
+
+            var entityPrimaryKeyType = PrimaryKeyResolver.ResolvePrimaryKeyType(
+                context,
+                interfaceType
+            );
+
+            var dbArgumentName = dbContextArgument.Name;
+            var dbArgumentUsing = dbContextArgument.ContainingNamespace.ToDisplayString();
             var interfaceName = interfaceType.Name;
             var interfaceUsing = interfaceType.ContainingNamespace.ToDisplayString();
+
             var dbData = new DbData(dbsetName, dbArgumentName, dbArgumentUsing);
-            var entityData = new EntityData(entityUsingName, entityName, entityPrimaryKey);
+            var entityData = new EntityData(
+                entityUsingName,
+                entityName,
+                entityPrimaryKey,
+                entityPrimaryKeyType
+            );
             return new ClassToGenerate(
                 classNamespace,
                 className,

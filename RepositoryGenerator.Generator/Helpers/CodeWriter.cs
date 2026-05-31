@@ -14,7 +14,7 @@ namespace RepositoryGenerator.Generator.Helpers
             var interfaceName = interfaceToGenerate.InterfaceName;
             var argumentTypeName = interfaceToGenerate.ArgumentName;
             var argumentUsing = interfaceToGenerate.ArgumentUsingName;
-
+            var primaryKeyType = interfaceToGenerate.PrimaryKeyType;
             var fileName = $"{interfaceNamespaceName}.{interfaceName}.g.cs";
 
             var code =
@@ -25,8 +25,8 @@ namespace {interfaceNamespaceName}
 {{
     public partial interface {interfaceName}
     {{
-        Task<{argumentTypeName}> GetById(int id);
-        Task<IEnumerable<{argumentTypeName}>> GetAll();
+        Task<{argumentTypeName}?> GetById({primaryKeyType} id);
+        Task<IReadOnlyList<{argumentTypeName}>> GetAll();
         Task Add({argumentTypeName} entity);
         Task Update({argumentTypeName} entity);
         Task Delete({argumentTypeName} entity);
@@ -47,6 +47,7 @@ namespace {interfaceNamespaceName}
             var interfaceUsingNamespace = classToGenerate.InterfaceUsingNamespace;
             var dbSetName = classToGenerate.DbForClassToGenerate.DbSetName;
             var primaryKey = classToGenerate.EntityData.EntityPrimaryKey;
+            var primaryKeyType = classToGenerate.EntityData.EnityPrimaryKeyType;
 
             var fileName = $"{classNamespaceName}.{className}.g.cs";
 
@@ -61,32 +62,32 @@ namespace {classNamespaceName}
 {{
      public partial class {className}({dbContextName} context) : {interfaceName}
      {{
-         public async Task<{entityName}?> GetById(int id)
+         public async Task<{entityName}?> GetById({primaryKeyType} id)
          {{
-                 return await context.{dbSetName}.FirstOrDefaultAsync(x => x.{primaryKey} == id);
+             return await context.{dbSetName}.FirstOrDefaultAsync(x => x.{primaryKey} == id);
          }}
          
-         public async Task<IEnumerable<{entityName}>> GetAll()
+         public async Task<IReadOnlyList<{entityName}>> GetAll()
          {{
-                 return await context.{dbSetName}.ToListAsync();
+             return await context.{dbSetName}.ToListAsync();
          }}
 
          public async Task Add({entityName} entity)
          {{
-                 context.{dbSetName}.Add(entity);
-                 await context.SaveChangesAsync();   
+             context.{dbSetName}.Add(entity);
+             await context.SaveChangesAsync();   
          }}
 
          public async Task Delete({entityName} entity)
          {{
-                context.{dbSetName}.Remove(entity);
-                await context.SaveChangesAsync();
+             context.{dbSetName}.Remove(entity);
+             await context.SaveChangesAsync();
          }}
 
          public async Task Update({entityName} entity)
          {{
-                context.{dbSetName}.Update(entity);
-                await context.SaveChangesAsync();
+             context.{dbSetName}.Update(entity);
+             await context.SaveChangesAsync();
          }}
      }}
 }}

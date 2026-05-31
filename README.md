@@ -1,31 +1,27 @@
 ﻿# RepositoryGenerator
 
-A C# source generator that automatically generates the **Repository Pattern** for your Entity Framework Core entities. Reduce boilerplate by letting the generator create your repository interfaces and implementations at compile time.
+A C# Source Generator that automatically generates repository classes and interfaces for Entity Framework Core, with built-in dependency injection registration — all at compile time with zero runtime overhead.
 
 ---
 
 ## Features
 
-- Automatically generates repository interfaces with standard CRUD methods
-- Automatically generates repository class implementations using EF Core
-- Generates a `ServiceCollectionExtensions` class for easy dependency injection registration
-- Zero runtime overhead — all code is generated at compile time via Roslyn
-
----
-
-## Requirements
-
-- .NET project using **Entity Framework Core**
-- Entities must follow a primary key convention (see [Primary Key Convention](#primary-key-convention))
+- Generates `IRepository`-style interfaces with standard CRUD methods
+- Generates concrete repository implementations backed by EF Core
+- Auto-registers all repositories with the DI container via a generated extension method
+- Supports custom primary key names and types
+- Uses `partial` classes and interfaces — you can extend generated code freely
+- Zero reflection, zero runtime cost
 
 ---
 
 ## Installation
 
-Install the NuGet package:
+Install both packages via NuGet:
 
 ```bash
 dotnet add package RepositoryGenerator
+dotnet add package RepositoryGenerator.Library
 ```
 
 Or via the NuGet Package Manager in Visual Studio.
@@ -34,44 +30,99 @@ Or via the NuGet Package Manager in Visual Studio.
 
 ## Getting Started
 
-### 1. Define your entity
-
-```csharp
-public class Product
-{
-    public int ProductId { get; set; } // or just "Id"
-    public string Name { get; set; }
-    public decimal Price { get; set; }
-}
-```
-
-### 2. Create your DbContext
-
-```csharp
-public class AppDbContext : DbContext
-{
-    public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
-
-    public DbSet<Product> Products { get; set; }
-}
-```
-
-### 3. Declare a partial interface with `[RPInterface]`
-
-Mark your repository interface with `[RPInterfaceAttribute<TEntity>]`. The generator will fill in the CRUD method signatures.
+### 1. Mark your interface with `[RepositoryFor<T>]`
 
 ```csharp
 using RepositoryGenerator.Library.Attributes;
 
-[RPInterface<Product>]
-public partial interface IProductRepository
-{
-}
+[RepositoryFor<Product>]
+public partial interface IProductRepository { }
 ```
 
-The generator will produce:
+The generator will expand this interface to include:
 
 ```csharp
+Task<Product> GetById(int id);
+Task<IEnumerable<Product>> GetAll();
+Task Add(Product entity);
+Task Update(Product entity);
+Task Delete(Product entity);
+```
+
+### 2. Mark your repository class with `[DbRepositoryFor<TEntity, TDbContext>]`
+
+```csharp
+using RepositoryGenerator.Library.Attributes;
+
+[DbRepositoryFor<Product, AppDbContext>]
+public partial class ProductRepository : IProductRepository { }
+```
+
+The generator will implement the full repository body using your `AppDbContext` and the matching `DbSet<Product>`.
+
+### 3. Register repositories in your DI container
+
+The generator produces a single extension method that registers all repositories:
+
+```csharp
+builder.Services.AddGeneratedRepositories();
+```
+
+---
+
+## Primary Key Configuration
+
+By default, the generator looks for a property named `Id` or `{EntityName}Id` of type `int`. You can override this behavior using the following attributes.
+
+### Override the primary key property name
+
+Apply `[PrimaryKeyIs("PropertyName")]` to your repository class:
+
+```csharp
+[DbRepositoryFor<Order, AppDbContext>]
+[PrimaryKeyIs("OrderNumber")]
+public partial class OrderRepository : IOrderRepository { }
+```
+
+### Override the primary key type
+
+Apply `[PrimaryKeyTypeIs<TKey>]` to your interface:
+
+```csharp
+[RepositoryFor<Order>]
+[PrimaryKeyTypeIs<Guid>]
+public partial interface IOrderRepository { }
+```
+
+Supported key types: `int` (default), `long`, `string`, `Guid`, or any custom type.
+
+---
+
+## Generated Code Example
+
+Given this setup:
+
+```csharp
+// Entity
+public class Product
+{
+    public int ProductId { get; set; }
+    public string Name { get; set; }
+}
+
+// Interface
+[RepositoryFor<Product>]
+public partial interface IProductRepository { }
+
+// Repository class
+[DbRepositoryFor<Product, AppDbContext>]
+public partial class ProductRepository : IProductRepository { }
+```
+
+The generator produces:
+
+```csharp
+// IProductRepository.g.cs
 public partial interface IProductRepository
 {
     Task<Product> GetById(int id);
@@ -80,27 +131,11 @@ public partial interface IProductRepository
     Task Update(Product entity);
     Task Delete(Product entity);
 }
-```
 
-### 4. Declare a partial class with `[RPClass]`
-
-Mark your repository class with `[RPClassAttribute<TEntity, TDbContext>]`. The class must implement your interface. The generator fills in the method bodies.
-
-```csharp
-using RepositoryGenerator.Library.Attributes;
-
-[RPClass<Product, AppDbContext>]
-public partial class ProductRepository : IProductRepository
-{
-}
-```
-
-The generator will produce a fully implemented class:
-
-```csharp
+// ProductRepository.g.cs
 public partial class ProductRepository(AppDbContext context) : IProductRepository
 {
-    public async Task<Product> GetById(int id)
+    public async Task<Product?> GetById(int id)
         => await context.Products.FirstOrDefaultAsync(x => x.ProductId == id);
 
     public async Task<IEnumerable<Product>> GetAll()
@@ -124,98 +159,57 @@ public partial class ProductRepository(AppDbContext context) : IProductRepositor
         await context.SaveChangesAsync();
     }
 }
-```
 
-### 5. Register services
-
-The generator produces an extension method so you can register all repositories in one call:
-
-```csharp
-// Program.cs
-builder.Services.AddGeneratedServices();
-```
-
-This registers all generated repositories as **scoped** services, e.g.:
-
-```csharp
-services.AddScoped<IProductRepository, ProductRepository>();
-```
-
----
-
-## Primary Key Convention
-
-The generator automatically detects the primary key of your entity. It looks for a property named either:
-
-- `{EntityName}Id` — e.g., `ProductId` for a `Product` entity
-- `Id`
-
-The property **must be of type `int`**. If no matching property is found, the generator will skip the class.
-
----
-
-## Generated Methods
-
-| Method | Description |
-|---|---|
-| `GetById(int id)` | Returns a single entity by its primary key |
-| `GetAll()` | Returns all entities in the table |
-| `Add(TEntity entity)` | Adds the entity and saves changes |
-| `Update(TEntity entity)` | Updates the entity and saves changes |
-| `Delete(TEntity entity)` | Removes the entity and saves changes |
-
----
-
-## Full Example
-
-```csharp
-// Entity
-public class Order
+// AddRepositories.g.cs
+public static class RepositoryGeneratorServiceCollectionExtensions
 {
-    public int OrderId { get; set; }
-    public string CustomerName { get; set; }
-    public DateTime CreatedAt { get; set; }
-}
-
-// DbContext
-public class ShopDbContext : DbContext
-{
-    public ShopDbContext(DbContextOptions<ShopDbContext> options) : base(options) { }
-    public DbSet<Order> Orders { get; set; }
-}
-
-// Interface (partial — generator fills in the methods)
-[RPInterface<Order>]
-public partial interface IOrderRepository { }
-
-// Class (partial — generator fills in the implementation)
-[RPClass<Order, ShopDbContext>]
-public partial class OrderRepository : IOrderRepository { }
-
-// Program.cs
-builder.Services.AddDbContext<ShopDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("Default")));
-
-builder.Services.AddGeneratedServices();
-
-// Usage in a controller or service
-public class OrderService(IOrderRepository repository)
-{
-    public Task<IEnumerable<Order>> GetAllOrders() => repository.GetAll();
+    public static IServiceCollection AddGeneratedRepositories(this IServiceCollection services)
+    {
+        services.AddScoped<IProductRepository, ProductRepository>();
+        return services;
+    }
 }
 ```
 
 ---
 
-## Limitations
+## Attributes Reference
 
-- Only supports **`int` primary keys**
-- One repository per entity — no support for composite keys
-- `GetById` returns `null` if no entity is found (no exception thrown)
-- All save operations call `SaveChangesAsync` immediately — no unit-of-work batching
+| Attribute | Target | Description |
+|---|---|---|
+| `[RepositoryFor<T>]` | Interface | Generates CRUD method signatures for entity `T` |
+| `[DbRepositoryFor<T, TDbContext>]` | Class | Generates EF Core repository implementation |
+| `[PrimaryKeyIs("name")]` | Class | Overrides the primary key property name |
+| `[PrimaryKeyTypeIs<TKey>]` | Interface | Overrides the primary key type |
+
+---
+
+## Requirements
+
+- .NET 6 or later
+- C# 10 or later
+- Entity Framework Core 6 or later
+- Roslyn-compatible compiler (Visual Studio 2022, `dotnet build`, Rider)
+
+---
+
+## Extending Generated Code
+
+Since generated classes and interfaces are `partial`, you can add your own methods without touching the generated file:
+
+```csharp
+// Your own file — safe from regeneration
+public partial class ProductRepository
+{
+    public async Task<IEnumerable<Product>> GetByCategory(string category)
+        => await context.Products
+            .Where(p => p.Category == category)
+            .ToListAsync();
+}
+```
 
 ---
 
 ## License
 
-This project is licensed under the MIT License.
+MIT
