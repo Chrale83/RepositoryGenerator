@@ -6,7 +6,7 @@ namespace RepositoryGenerator.Generator.Helpers
 {
     internal static class InterfaceTargetParser
     {
-        internal static InterfaceToGenerate? TryParse(GeneratorAttributeSyntaxContext context)
+        internal static InterfaceToGenerate? Parse(GeneratorAttributeSyntaxContext context)
         {
             var attributeSymbol = (INamedTypeSymbol)context.TargetSymbol;
 

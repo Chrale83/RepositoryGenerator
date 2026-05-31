@@ -26,7 +26,7 @@ namespace {interfaceNamespaceName}
     public partial interface {interfaceName}
     {{
         Task<{argumentTypeName}?> GetById({primaryKeyType} id);
-        Task<IEnumerable<{argumentTypeName}>> GetAll();
+        Task<IReadOnlyList<{argumentTypeName}>> GetAll();
         Task Add({argumentTypeName} entity);
         Task Update({argumentTypeName} entity);
         Task Delete({argumentTypeName} entity);
@@ -67,7 +67,7 @@ namespace {classNamespaceName}
              return await context.{dbSetName}.FirstOrDefaultAsync(x => x.{primaryKey} == id);
          }}
          
-         public async Task<IEnumerable<{entityName}>> GetAll()
+         public async Task<IReadOnlyList<{entityName}>> GetAll()
          {{
              return await context.{dbSetName}.ToListAsync();
          }}

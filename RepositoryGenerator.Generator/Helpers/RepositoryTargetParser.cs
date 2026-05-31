@@ -10,9 +10,8 @@ namespace RepositoryGenerator.Generator.Helpers
         private const string ClassExtensionAttribute =
             "RepositoryGenerator.Library.Attributes.DbRepositoryForAttribute`2";
 
-        internal static ClassToGenerate? TryParse(GeneratorSyntaxContext context)
+        internal static ClassToGenerate? Parse(GeneratorSyntaxContext context)
         {
-            //Check if correct attribute
             var classDeclarationSyntax = (ClassDeclarationSyntax)context.Node;
 
             var attributeSymbol = context.SemanticModel.Compilation.GetTypeByMetadataName(

@@ -19,14 +19,14 @@ namespace RepositoryGenerator.Generator
                 .SyntaxProvider.ForAttributeWithMetadataName(
                     InterfaceExtensionAttribute,
                     static (_, _) => true,
-                    (ctx, _) => InterfaceTargetParser.TryParse(ctx)
+                    (ctx, _) => InterfaceTargetParser.Parse(ctx)
                 )
                 .Collect();
 
             var classes = context
                 .SyntaxProvider.CreateSyntaxProvider(
                     predicate: static (node, _) => IsClassTarget(node),
-                    transform: static (ctx, _) => RepositoryTargetParser.TryParse(ctx)
+                    transform: static (ctx, _) => RepositoryTargetParser.Parse(ctx)
                 )
                 .Collect();
 
