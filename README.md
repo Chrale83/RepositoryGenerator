@@ -1,5 +1,9 @@
 ﻿# RepositoryGenerator
 
+This project was developed as my degree project (examensarbete) for the .NET Developer program (Systemutvecklare .NET) at IT-Högskolan, Gothenburg, 2024–2026.
+
+📄 [Read the full thesis (Swedish, PDF)](./ExamensArbete.pdf)
+
 A C# Source Generator that automatically generates repository classes and interfaces for Entity Framework Core, with built-in dependency injection registration — all at compile time with zero runtime overhead.
 
 ---
@@ -15,16 +19,40 @@ A C# Source Generator that automatically generates repository classes and interf
 
 ---
 
+
 ## Installation
 
-Install both packages via NuGet:
+This package is **not published on NuGet.org**. To use it, choose one of the following options:
+
+### Option 1: Use the prebuilt `.nupkg`
+
+A prebuilt package is included in this repository under the [`nugetpackage`](./nugetpackage) folder as `RepositoryGenerator.1.0.0.nupkg`.
+
+Clone the repo, then add the `nugetpackage` folder as a local NuGet source and install from it:
 
 ```bash
-dotnet add package RepositoryGenerator
-dotnet add package RepositoryGenerator.Library
+git clone https://github.com/chrale83/RepositoryGenerator.git
+cd RepositoryGenerator
+
+dotnet nuget add source ./nugetpackage -n RepositoryGeneratorLocal
+dotnet add package RepositoryGenerator -s RepositoryGeneratorLocal
 ```
 
-Or via the NuGet Package Manager in Visual Studio.
+Or, in Visual Studio: go to **Tools → NuGet Package Manager → Package Manager Settings → Package Sources**, add the `nugetpackage` folder as a new source, then install `RepositoryGenerator` from there as usual.
+
+### Option 2: Build from source
+
+Alternatively, build the package yourself:
+
+```bash
+git clone https://github.com/yourusername/RepositoryGenerator.git
+cd RepositoryGenerator
+dotnet pack -c Release
+```
+
+This produces a new `.nupkg` file in the `bin/Release` folder, which can be referenced the same way as described above.
+
+---
 
 ---
 

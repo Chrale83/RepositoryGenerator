@@ -1,53 +1,59 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <LangVersion>14.0</LangVersion>
+    <Nullable>enable</Nullable>
+    <IsRoslynComponent>true</IsRoslynComponent>
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
+  </PropertyGroup>
 
-	<PropertyGroup>
-		<TargetFramework>netstandard2.0</TargetFramework>
-		<LangVersion>14.0</LangVersion>
-		<Nullable>enable</Nullable>
-		<IsRoslynComponent>true</IsRoslynComponent>
-		<IncludeBuildOutput>false</IncludeBuildOutput>
-		<EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
-	</PropertyGroup>
+  <PropertyGroup>
+    <PackageId>RepositoryGenerator</PackageId>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <Version>1.0.0</Version>
+    <AssemblyVersion>$(Version).0</AssemblyVersion>
+    <AssemblyFileVersion>$(Version).0</AssemblyFileVersion>
+    <Authors>Christian Alexandersson</Authors>
+    <Description>Exam project to generate Repository pattern</Description>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+  </PropertyGroup>
 
-	<PropertyGroup>
-		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-		<Version>0.0.9</Version>
-		<AssemblyVersion>$(Version).0</AssemblyVersion>
-		<AssemblyFileVersion>$(Version).0</AssemblyFileVersion>
-		<Authors>Christian Alexandersson</Authors>
-		<Description>Exam project to generate Repository pattern</Description>
-		<PackageReadmeFile>README.md</PackageReadmeFile>
-	</PropertyGroup>
+  <ItemGroup>
+    <None Include="..\README.md" Pack="true" PackagePath="\" />
+    <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="5.3.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="5.3.0" />
+  </ItemGroup>
 
-	<ItemGroup>
-		<None Include="..\README.md" Pack="true" PackagePath="\" />
-		<PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="5.3.0">
-			<PrivateAssets>all</PrivateAssets>
-			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-		</PackageReference>
-		<PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="5.3.0" />
-	</ItemGroup>
+  <ItemGroup>
+    <ProjectReference
+      Include="..\RepositoryGenerator.Library\RepositoryGenerator.Library.csproj"
+      ReferenceOutputAssembly="false"
+    />
+  </ItemGroup>
 
-	<ItemGroup>
-		<ProjectReference Include="..\RepositoryGenerator.Library\RepositoryGenerator.Library.csproj"
-		                  ReferenceOutputAssembly="false" />
-	</ItemGroup>
+  <ItemGroup>
+    <None
+      Include="$(OutputPath)\$(AssemblyName).dll"
+      Pack="true"
+      PackagePath="analyzers/dotnet/cs"
+      Visible="false"
+    />
 
-	<ItemGroup>
-		<None Include="$(OutputPath)\$(AssemblyName).dll"
-		      Pack="true"
-		      PackagePath="analyzers/dotnet/cs"
-		      Visible="false" />
-
-		<None Include="..\RepositoryGenerator.Library\bin\$(Configuration)\netstandard2.0\RepositoryGenerator.Library.dll"
-		      Pack="true"
-		      PackagePath="analyzers/dotnet/cs"
-		      Visible="false" />
-		<None Include="..\RepositoryGenerator.Library\bin\$(Configuration)\netstandard2.0\RepositoryGenerator.Library.dll"
-				  Pack="true"
-				  PackagePath="lib/netstandard2.0"
-				  Visible="false" />
-
-	</ItemGroup>
-
+    <None
+      Include="..\RepositoryGenerator.Library\bin\$(Configuration)\netstandard2.0\RepositoryGenerator.Library.dll"
+      Pack="true"
+      PackagePath="analyzers/dotnet/cs"
+      Visible="false"
+    />
+    <None
+      Include="..\RepositoryGenerator.Library\bin\$(Configuration)\netstandard2.0\RepositoryGenerator.Library.dll"
+      Pack="true"
+      PackagePath="lib/netstandard2.0"
+      Visible="false"
+    />
+  </ItemGroup>
 </Project>
